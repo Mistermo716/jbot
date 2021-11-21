@@ -231,6 +231,10 @@ public class SlackBotTest {
         assertThat(capture.toString(), containsString("You can always schedule one with 'setup meeting' command"));
     }
 
+    /**
+     * This will test to see if chars or strings with characters are valid time format.
+     * chars or strings with characters should not be a valid time for a meeting
+     */
     @Test
     public void Given_InConversation_WhenInvalidTimeChars() {
         TextMessage textMessage = new TextMessage("{\"type\": \"message\"," +
@@ -250,6 +254,10 @@ public class SlackBotTest {
         assertThat(capture.toString(), containsString("Your meeting time no is not a valid time"));
     }
 
+    /**
+     * This will test to see if an invalid time will be caught by the confirmValidTime method.
+     * An invalid time should not be a valid time for a meeting
+     */
     @Test
     public void Given_InConversation_WhenInvalidTime() {
         TextMessage textMessage = new TextMessage("{\"type\": \"message\"," +
