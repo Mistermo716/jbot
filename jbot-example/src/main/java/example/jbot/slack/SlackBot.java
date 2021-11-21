@@ -124,9 +124,19 @@ public class SlackBot extends Bot {
      */
     @Controller(next = "askTimeForMeeting")
     public void confirmTiming(WebSocketSession session, Event event) {
-        reply(session, event, "Your meeting is set at " + event.getText() +
-                ". Would you like to repeat it tomorrow?");
-        nextConversation(event);    // jump to next question in conversation
+        boolean valid = confirmValidTime(event.getText());
+
+        if(!valid) {
+            reply(session, event, "Your meeting time " + event.getText() +
+                    " is not a valid time");
+        }
+
+        if(valid) {
+            reply(session, event, "Your meeting is set at " + event.getText() +
+                    ". Would you like to repeat it tomorrow?");
+        }
+
+        nextConversation(event);
     }
 
     /**

@@ -167,9 +167,19 @@ public class FbBot extends Bot {
      */
     @Controller(next = "askTimeForMeeting")
     public void confirmTiming(Event event) {
-        reply(event, "Your meeting is set at " + event.getMessage().getText() +
-                ". Would you like to repeat it tomorrow?");
-        nextConversation(event);    // jump to next question in conversation
+        boolean valid = confirmValidTime(event.getMessage().getText());
+
+        if(!valid) {
+            reply(event, "Your meeting time " + event.getMessage().getText() +
+                    " is not a valid time");
+        }
+
+        if(valid) {
+            reply(event, "Your meeting is set at " + event.getMessage().getText() +
+                    ". Would you like to repeat it tomorrow?");
+        }
+
+        nextConversation(event);
     }
 
     /**

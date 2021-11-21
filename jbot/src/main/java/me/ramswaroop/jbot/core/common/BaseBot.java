@@ -98,6 +98,21 @@ public abstract class BaseBot {
     }
 
     /**
+     * This method confirms if time is valid.
+     *
+     * @param t
+     *
+     * @return whether valid or not
+     */
+    public boolean confirmValidTime(String t){
+        if(!t.matches("^([01]\\d|2[0-3]):?([0-5]\\d)$")){
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Search for a method whose {@link Controller#pattern()} match with the {@code Event} text or payload
      * received from Slack/Facebook and also filter out the methods in {@code methodWrappers} whose
      * {@link Controller#pattern()} do not match.

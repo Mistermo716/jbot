@@ -231,6 +231,43 @@ public class SlackBotTest {
         assertThat(capture.toString(), containsString("You can always schedule one with 'setup meeting' command"));
     }
 
+    @Test
+    public void Given_InConversation_WhenInvalidTimeChars() {
+        TextMessage textMessage = new TextMessage("{\"type\": \"message\"," +
+                "\"ts\": \"1368878749.000602\"," +
+                "\"channel\": \"A1E78BACV\"," +
+                "\"user\": \"U023BECGF\"," +
+                "\"text\": \"setup meeting\"}");
+        bot.handleTextMessage(session, textMessage);
+        assertThat(capture.toString(), containsString("At what time (ex. 15:30) do you want me to set up the meeting?"));
+
+        textMessage = new TextMessage("{\"type\": \"message\"," +
+                "\"ts\": \"1358878749.000002\"," +
+                "\"channel\": \"A1E78BACV\"," +
+                "\"user\": \"U023BECGF\"," +
+                "\"text\": \"no\"}");
+        bot.handleTextMessage(session, textMessage);
+        assertThat(capture.toString(), containsString("Your meeting time no is not a valid time"));
+    }
+
+    @Test
+    public void Given_InConversation_WhenInvalidTime() {
+        TextMessage textMessage = new TextMessage("{\"type\": \"message\"," +
+                "\"ts\": \"1368878749.000602\"," +
+                "\"channel\": \"A1E78BACV\"," +
+                "\"user\": \"U023BECGF\"," +
+                "\"text\": \"setup meeting\"}");
+        bot.handleTextMessage(session, textMessage);
+        assertThat(capture.toString(), containsString("At what time (ex. 15:30) do you want me to set up the meeting?"));
+
+        textMessage = new TextMessage("{\"type\": \"message\"," +
+                "\"ts\": \"1358878749.000002\"," +
+                "\"channel\": \"A1E78BACV\"," +
+                "\"user\": \"U023BECGF\"," +
+                "\"text\": \"25:10\"}");
+        bot.handleTextMessage(session, textMessage);
+        assertThat(capture.toString(), containsString("Your meeting time 25:10 is not a valid time"));
+    }
 
     /**
      * Slack Bot for unit tests.
@@ -302,9 +339,19 @@ public class SlackBotTest {
 
         @Controller(next = "askTimeForMeeting")
         public void confirmTiming(WebSocketSession session, Event event) {
-            System.out.println("Your meeting is set at " + event.getText() +
-                    ". Would you like to repeat it tomorrow?");
-            nextConversation(event);    // jump to next question in conversation
+            boolean valid = confirmValidTime(event.getText());
+
+            if(!valid) {
+                reply(session, event, "Your meeting time " + event.getText() +
+                        " is not a valid time");
+            }
+
+            if(valid) {
+                reply(session, event, "Your meeting is set at " + event.getText() +
+                        ". Would you like to repeat it tomorrow?");
+            }
+
+            nextConversation(event);
         }
 
         @Controller(next = "askWhetherToRepeat")
