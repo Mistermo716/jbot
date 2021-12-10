@@ -123,6 +123,51 @@ public class FbBotTest {
         assertThat(capture.toString(), containsString("You can always schedule one with 'setup meeting' command"));
     }
 
+    /**
+     * This will test to see if chars or strings with characters are valid time format.
+     * chars or strings with characters should not be a valid time for a meeting
+     */
+    @Test
+    public void Given_InConversation_WhenInvalidTimeChars() throws IOException {
+        Callback callback = new ObjectMapper().readValue("{\"object\":\"page\",\"entry\":[{\"id\":" +
+                "\"1854218851225832\",\"time\":1520770458290,\"messaging\":[{\"sender\":{\"id\":" +
+                "\"1373801529391393\"},\"recipient\":{\"id\":\"1854218851225832\"},\"timestamp\":1520770457527," +
+                "\"message\":{\"mid\":\"mid.$cAAaWsSxbt_VoRkDnt1iFPuiv7I5q\",\"seq\":87611,\"text\":" +
+                "\"setup meeting\"}}]}]}", Callback.class);
+        bot.setupWebhookEndpoint(callback);
+        assertThat(capture.toString(), containsString("At what time (ex. 15:30) do you want me to set up the meeting?"));
+
+        callback = new ObjectMapper().readValue("{\"object\":\"page\",\"entry\":[{\"id\":" +
+                "\"1854218851225832\",\"time\":1520770458290,\"messaging\":[{\"sender\":{\"id\":" +
+                "\"1373801529391393\"},\"recipient\":{\"id\":\"1854218851225832\"},\"timestamp\":1520770457527," +
+                "\"message\":{\"mid\":\"mid.$cAAaWsSxbt_VoRkDnt1iFPuiv7I5q\",\"seq\":87611,\"text\":" +
+                "\"no\"}}]}]}", Callback.class);
+        bot.setupWebhookEndpoint(callback);
+        assertThat(capture.toString(), containsString("Your meeting time no is not a valid time"));
+    }
+
+    /**
+     * This will test to see if an invalid time will be caught by the confirmValidTime method.
+     * An invalid time should not be a valid time for a meeting
+     */
+    @Test
+    public void Given_InConversation_WhenInvalidTime() throws IOException {
+        Callback callback = new ObjectMapper().readValue("{\"object\":\"page\",\"entry\":[{\"id\":" +
+                "\"1854218851225832\",\"time\":1520770458290,\"messaging\":[{\"sender\":{\"id\":" +
+                "\"1373801529391393\"},\"recipient\":{\"id\":\"1854218851225832\"},\"timestamp\":1520770457527," +
+                "\"message\":{\"mid\":\"mid.$cAAaWsSxbt_VoRkDnt1iFPuiv7I5q\",\"seq\":87611,\"text\":" +
+                "\"setup meeting\"}}]}]}", Callback.class);
+        bot.setupWebhookEndpoint(callback);
+        assertThat(capture.toString(), containsString("At what time (ex. 15:30) do you want me to set up the meeting?"));
+
+        callback = new ObjectMapper().readValue("{\"object\":\"page\",\"entry\":[{\"id\":" +
+                "\"1854218851225832\",\"time\":1520770458290,\"messaging\":[{\"sender\":{\"id\":" +
+                "\"1373801529391393\"},\"recipient\":{\"id\":\"1854218851225832\"},\"timestamp\":1520770457527," +
+                "\"message\":{\"mid\":\"mid.$cAAaWsSxbt_VoRkDnt1iFPuiv7I5q\",\"seq\":87611,\"text\":" +
+                "\"25:10\"}}]}]}", Callback.class);
+        bot.setupWebhookEndpoint(callback);
+        assertThat(capture.toString(), containsString("Your meeting time 25:10 is not a valid time"));
+    }
 
     /**
      * Facebook Bot for unit tests.
@@ -164,9 +209,19 @@ public class FbBotTest {
 
         @Controller(next = "askTimeForMeeting")
         public void confirmTiming(Event event) {
-            System.out.println("Your meeting is set at " + event.getMessage().getText() +
-                    ". Would you like to repeat it tomorrow?");
-            nextConversation(event);    // jump to next question in conversation
+            boolean valid = confirmValidTime(event.getMessage().getText());
+
+            if(!valid) {
+                reply(event, "Your meeting time " + event.getMessage().getText() +
+                        " is not a valid time");
+            }
+
+            if(valid) {
+                reply(event, "Your meeting is set at " + event.getMessage().getText() +
+                        ". Would you like to repeat it tomorrow?");
+            }
+
+            nextConversation(event);
         }
 
         @Controller(next = "askWhetherToRepeat")
